@@ -24,8 +24,6 @@ _ReSharper.*
 /UpgradeLog.htm
 *.htm
 
-credentials.json
-
 *.swp
 *.*~
 project.lock.json
@@ -60,3 +58,4 @@ msbuild.wrn
 .vs/
 
 *.log
+/src/OCR.Business/Google/credentials.json
