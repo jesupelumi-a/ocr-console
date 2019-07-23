@@ -3,18 +3,45 @@ using Newtonsoft.Json;
 using OCR.Abstractions;
 using OCR.Abstractions.Enums;
 using OCR.Abstractions.Models;
-using OCR.Abstractions.Services;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
+using System.Linq;
 
-namespace OCR.Business.Patterns
+namespace OMV.Layouts
 {
-    public static class PatternAService
+    public class LayoutA
     {
+        public bool MatchAndCreateCSV(List<Thumbnail> thumbnails, string csvPath)
+        {
+            bool retVal = false;
+
+            try
+            {
+                // Step 1: Get the first 5 ocr results
+                var thumbs = thumbnails.Take(5);
+
+                // Step 2: Run each thumb against all the models; when a model returns a match, that's our guy
+                foreach (var thumb in thumbs)
+                {
+                    var annotations = JsonConvert.DeserializeObject<List<Annotation>>(thumb.OcrResult);
+                    if (Match(annotations))
+                    {
+                        CreateCSV(thumbnails, csvPath);
+                        retVal = true;
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"OMV.Layouts - LayoutA: {ex.Message}");
+            }
+
+            return retVal;
+        }
+
         public static void CreateCSV(List<Thumbnail> thumbnails, string csvPath)
         {
             var annotations = new List<Annotation>();
@@ -40,7 +67,6 @@ namespace OCR.Business.Patterns
                 csv.WriteField("Heading");
                 csv.WriteField("Pitch");
                 csv.WriteField("Roll");
-
                 csv.WriteField("Description");
                 csv.NextRecord();
 
@@ -49,14 +75,12 @@ namespace OCR.Business.Patterns
                     var data = item.Description;
 
                     csv.WriteField(item.Time);
-
                     csv.WriteField(GetExtractedData(data, DataType.Altitude));
                     csv.WriteField(GetExtractedData(data, DataType.BTY));
                     csv.WriteField(GetExtractedData(data, DataType.Depth));
                     csv.WriteField(GetExtractedData(data, DataType.Heading));
                     csv.WriteField(GetExtractedData(data, DataType.Pitch));
                     csv.WriteField(GetExtractedData(data, DataType.Roll));
-
                     csv.WriteField(item.Description.Replace('\n', ' '));
                     csv.NextRecord();
                 }
@@ -106,11 +130,11 @@ namespace OCR.Business.Patterns
                         break;
                     case DataType.Pitch:
                         delimiters.Add("\nP:"); delimiters.Add("\nP "); delimiters.Add("\nP");
-                        //delimiters.Add("P: "); delimiters.Add("P ");
+                        delimiters.Add("P: "); delimiters.Add("P ");
                         break;
                     case DataType.Roll:
                         delimiters.Add("\nR:"); delimiters.Add("\nR "); delimiters.Add("\nR");
-                        //delimiters.Add("R:"); delimiters.Add("R ");
+                        delimiters.Add(" R:"); delimiters.Add(" R ");
                         break;
                     default:
                         break;
@@ -148,8 +172,10 @@ namespace OCR.Business.Patterns
                 var _extract = new string(charList.ToArray());
                 _extract = _extract.Trim();
 
-                if (type == DataType.Pitch)
-                    _extract = Helper.GetBeforeString(_extract, "\n");
+                if (_extract.Contains("\n"))
+                    _extract = _extract.Replace("\n", " ");
+
+                _extract = Helper.GetBeforeChar(_extract, ' ');
 
                 if (!string.IsNullOrEmpty(_extract))
                 {

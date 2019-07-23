@@ -1,63 +1,43 @@
-﻿using CsvHelper;
-using Newtonsoft.Json;
-using OCR.Abstractions.Enums;
-using OCR.Abstractions.Models;
+﻿using OCR.Abstractions.Models;
 using OCR.Abstractions.Services;
-using OCR.Business.Patterns;
+using OMV.Layouts;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace OCR.Business
 {
     public class ResultService : IResultService
     {
-        public ResultService()
+        public void CreateCSV(List<Thumbnail> thumbnails, string filePath)
         {
+            // Step 1: Get OMV.Layouts dll
+            var layoutsPath = Path.Combine(Environment.CurrentDirectory, @"Layouts\OMV.Layouts.dll");
+            var layoutsAssembly = Assembly.LoadFrom(layoutsPath);
 
+            //Get List of Classes
+            Type[] types = layoutsAssembly.GetTypes();
+                        
+            var _types = types.Where(t => !t.GetTypeInfo().IsDefined(typeof(CompilerGeneratedAttribute), true));
+
+            foreach (Type tc in _types)
+            {
+                // create an instance of the object
+                object ClassObj = Activator.CreateInstance(tc);
+
+                bool isMatched = (bool)tc.InvokeMember("MatchAndCreateCSV", BindingFlags.Default | BindingFlags.InvokeMethod, null, ClassObj, new object[] { thumbnails, filePath });
+
+                if (isMatched) break;
+            }
         }
-        
-        public void Print(List<Thumbnail> thumbnails, string filePath)
+
+        public void TestCreateCSV(List<Thumbnail> thumbnails, string filePath)
         {
-            var matchedPattern = GetPattern(thumbnails);
-
-            if (matchedPattern == Pattern.A)
-            {
-                PatternAService.CreateCSV(thumbnails, filePath);
-            }
-            else
-            {
-                PatternDefaultService.CreateCSV(thumbnails, filePath);
-            }
-        }
-
-        private Pattern GetPattern(List<Thumbnail> thumbnails)
-        {
-            var retVal = Pattern.Default;
-            try
-            {
-                // Step 1: Get the first 5 ocr results
-                var thumbs = thumbnails.Take(5);
-
-                // Step 2: Run each thumb against all the models; when a model returns a match, that's our guy
-                foreach (var thumb in thumbs)
-                {
-                    var annotations = JsonConvert.DeserializeObject<List<Annotation>>(thumb.OcrResult);
-                    if (PatternAService.Match(annotations))
-                    {
-                        retVal = Pattern.A;
-                        break;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"ResultService - GetPattern: {ex.Message}");
-            }
-            return retVal;
+            var layout = new LayoutA();
+            layout.MatchAndCreateCSV(thumbnails, filePath);
         }
     }
 }

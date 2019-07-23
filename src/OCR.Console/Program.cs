@@ -6,7 +6,6 @@ using OCR.Abstractions.Enums;
 using OCR.Abstractions.Models;
 using OCR.Abstractions.Services;
 using OCR.Business;
-using OCR.Business.Patterns;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -39,7 +38,7 @@ namespace OCR.Console
             if (string.IsNullOrWhiteSpace(videoPath))
                 throw new Exception("error occured with video path");
 
-            var thumbnails = await imageExtractorService.SplitAsync(videoPath, 300);
+            var thumbnails = await imageExtractorService.SplitAsync(videoPath, 10);
 
             if (thumbnails.Count == 0)
                 throw new Exception("no images returned to perform OCR on");
@@ -55,8 +54,8 @@ namespace OCR.Console
             var fileName = Helper.GetFileName(videoPath);
             string filePath = Path.Combine(fileName + ".csv");
             if (File.Exists(filePath)) File.Delete(filePath);
-
-            resultService.Print(result, filePath);
+            
+            resultService.CreateCSV(result, filePath);
 
             timer.Stop();
             System.Console.WriteLine("Time elapsed: {0:hh\\:mm\\:ss}", timer.Elapsed);

@@ -40,7 +40,7 @@ namespace OCR.Abstractions
         {
             int i = source.IndexOf(delimeter);
 
-            string result = i < 0 ? "" : source.Substring(0, i);
+            string result = i < 0 ? source : source.Substring(0, i);
             return result;
         }
 
@@ -58,6 +58,11 @@ namespace OCR.Abstractions
 
             string result = source.Substring(startIndex + delimeter.Length);
             return result;
+        }
+
+        public static string RemoveNewLine(string source)
+        {
+            return source.Replace('\n', ' ');
         }
     }
 }

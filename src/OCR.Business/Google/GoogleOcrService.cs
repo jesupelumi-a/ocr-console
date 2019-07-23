@@ -42,9 +42,9 @@ namespace OCR.Business
 
                 Console.WriteLine($"OCR Performed - {index}");
 
-                string txtPath = Path.Combine(Helper.GetBeforeLastIndexOf(imagePath, '.') + ".txt");
-                if (File.Exists(txtPath)) File.Delete(txtPath);
-                File.AppendAllText(txtPath, beautified);
+                //string txtPath = Path.Combine(Helper.GetBeforeLastIndexOf(imagePath, '.') + ".txt");
+                //if (File.Exists(txtPath)) File.Delete(txtPath);
+                //File.AppendAllText(txtPath, beautified);
 
                 result = beautified;
             }

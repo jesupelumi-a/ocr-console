@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OCR.Abstractions\OCR.Abstractions.csproj" />
+    <ProjectReference Include="..\OMV.Layouts\OMV.Layouts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -15,6 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Layouts\OMV.Layouts.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="lib\ffmpeg.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
