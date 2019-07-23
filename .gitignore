@@ -24,6 +24,8 @@ _ReSharper.*
 /UpgradeLog.htm
 *.htm
 
+credentials.json
+
 *.swp
 *.*~
 project.lock.json
