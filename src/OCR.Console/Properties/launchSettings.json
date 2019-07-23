@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "OCR.Console": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\OCR\\Test\\test.MP4"
+    }
+  }
+}
