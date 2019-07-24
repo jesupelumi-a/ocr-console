@@ -30,18 +30,24 @@ namespace OCR.Console
             Stopwatch timer = new Stopwatch();
             timer.Start();
             var result = new List<Thumbnail>();
-            string path = "";
-            foreach (var arg in args)
-                path += arg + " ";
-            string videoPath = path;
+            int duration = 10;
 
-            if (string.IsNullOrWhiteSpace(videoPath))
-                throw new Exception("error occured with video path");
+            //string path = "";
+            //foreach (var arg in args)
+            //    path += arg + " ";
+            //videoPath = path;
 
-            var thumbnails = await imageExtractorService.SplitAsync(videoPath, 10);
+            string videoPath = args[0];
+            if (args.Length > 1)
+            {
+                if (int.TryParse(args[1].Trim(), out int _time)) duration = _time > 0 ? _time : duration;
+                else throw new Exception("Time argument is invalid");
+            }
+            System.Console.WriteLine($"-p {videoPath} -t {duration}");
 
-            if (thumbnails.Count == 0)
-                throw new Exception("no images returned to perform OCR on");
+            if (string.IsNullOrWhiteSpace(videoPath)) throw new Exception("error occured with video path");
+            var thumbnails = await imageExtractorService.SplitAsync(videoPath, duration);
+            if (thumbnails.Count == 0) throw new Exception("no images returned to perform OCR on");
 
             int i = 1;
             foreach (var thumbnail in thumbnails)
@@ -54,7 +60,9 @@ namespace OCR.Console
             var fileName = Helper.GetFileName(videoPath);
             string filePath = Path.Combine(fileName + ".csv");
             if (File.Exists(filePath)) File.Delete(filePath);
-            
+
+            //result = thumbnails;
+
             resultService.CreateCSV(result, filePath);
 
             timer.Stop();

@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace OMV.Layouts
 {
-    public class LayoutA
+    public class LayoutB
     {
         public bool MatchAndCreateCSV(List<Thumbnail> thumbnails, string csvPath)
         {
@@ -207,34 +207,30 @@ namespace OMV.Layouts
 
         public static bool Match(List<Annotation> ocrResult)
         {
-            bool retVal = THRMatched(ocrResult) &&
-                          DepthMatched(ocrResult) &&
-                          HeadingMatched(ocrResult) &&
-                          TRNMatched(ocrResult);
-            return retVal;
+            return false;
         }
 
-        public static bool THRMatched(List<Annotation> ocrResult)
+        public static bool IsEastingMatched(List<Annotation> ocrResult)
         {
             bool retVal = false;
 
-            int thrMinX0 = 25; int thrMaxX0 = 35; int thrMinY0 = 70; int thrMaxY0 = 80;
-            int thrMinX1 = 60; int thrMaxX1 = 70; int thrMinY1 = 70; int thrMaxY1 = 80;
-            int thrMinX2 = 60; int thrMaxX2 = 70; int thrMinY2 = 60; int thrMaxY2 = 70;
-            int thrMinX3 = 25; int thrMaxX3 = 35; int thrMinY3 = 60; int thrMaxY3 = 70;
-            retVal = ocrResult.Exists(d => ((d.BoundingPoly.Vertices[0].X >= thrMinX0 && d.BoundingPoly.Vertices[0].X <= thrMaxX0
-                                              && d.BoundingPoly.Vertices[0].Y >= thrMinY0 && d.BoundingPoly.Vertices[0].Y <= thrMaxY0) ||
+            int eastingMinX0 = 25; int eastingMaxX0 = 35; int eastingMinY0 = 70; int eastingMaxY0 = 80;
+            int eastingMinX1 = 60; int eastingMaxX1 = 70; int eastingMinY1 = 70; int eastingMaxY1 = 80;
+            int eastingMinX2 = 60; int eastingMaxX2 = 70; int eastingMinY2 = 60; int eastingMaxY2 = 70;
+            int eastingMinX3 = 25; int eastingMaxX3 = 35; int eastingMinY3 = 60; int eastingMaxY3 = 70;
+            retVal = ocrResult.Exists(d => ((d.BoundingPoly.Vertices[0].X >= eastingMinX0 && d.BoundingPoly.Vertices[0].X <= eastingMaxX0
+                                              && d.BoundingPoly.Vertices[0].Y >= eastingMinY0 && d.BoundingPoly.Vertices[0].Y <= eastingMaxY0) ||
 
-                                                (d.BoundingPoly.Vertices[1].X >= thrMinX1 && d.BoundingPoly.Vertices[1].X <= thrMaxX1
-                                              && d.BoundingPoly.Vertices[1].Y >= thrMinY1 && d.BoundingPoly.Vertices[1].Y <= thrMaxY1) ||
+                                                (d.BoundingPoly.Vertices[1].X >= eastingMinX1 && d.BoundingPoly.Vertices[1].X <= eastingMaxX1
+                                              && d.BoundingPoly.Vertices[1].Y >= eastingMinY1 && d.BoundingPoly.Vertices[1].Y <= eastingMaxY1) ||
 
-                                                (d.BoundingPoly.Vertices[2].X >= thrMinX2 && d.BoundingPoly.Vertices[2].X <= thrMaxX2
-                                              && d.BoundingPoly.Vertices[2].Y >= thrMinY2 && d.BoundingPoly.Vertices[2].Y <= thrMaxY2) ||
+                                                (d.BoundingPoly.Vertices[2].X >= eastingMinX2 && d.BoundingPoly.Vertices[2].X <= eastingMaxX2
+                                              && d.BoundingPoly.Vertices[2].Y >= eastingMinY2 && d.BoundingPoly.Vertices[2].Y <= eastingMaxY2) ||
 
-                                                (d.BoundingPoly.Vertices[3].X >= thrMinX3 && d.BoundingPoly.Vertices[3].X <= thrMaxX3
-                                              && d.BoundingPoly.Vertices[3].Y >= thrMinY3 && d.BoundingPoly.Vertices[3].Y <= thrMaxY3))
+                                                (d.BoundingPoly.Vertices[3].X >= eastingMinX3 && d.BoundingPoly.Vertices[3].X <= eastingMaxX3
+                                              && d.BoundingPoly.Vertices[3].Y >= eastingMinY3 && d.BoundingPoly.Vertices[3].Y <= eastingMaxY3))
 
-                                              && d.Description.Contains("THR")
+                                              && d.Description.Contains("easting")
                                                 );
 
             return retVal;

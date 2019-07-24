@@ -2,7 +2,7 @@
   "profiles": {
     "OCR.Console": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\OCR\\LayoutB\\test.MP4"
+      "commandLineArgs": "C:\\OCR\\LayoutB\\test1.mp4"
     }
   }
 }

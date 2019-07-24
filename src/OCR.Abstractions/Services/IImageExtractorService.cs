@@ -9,5 +9,6 @@ namespace OCR.Abstractions.Services
     public interface IImageExtractorService
     {
         Task<List<Thumbnail>> SplitAsync(string videoPath, int duration = 10, bool captureFirstScreen = true, bool captureLastScreen = true);
+        Task<List<Thumbnail>> TestSplitAsync(string videoPath, int duration = 10, bool captureFirstScreen = true, bool captureLastScreen = true);
     }
 }

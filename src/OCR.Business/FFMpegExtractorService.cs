@@ -46,6 +46,43 @@ namespace OCR.Business
             return await Task.FromResult(thumbnails);
         }
 
+        public Task<List<Thumbnail>> TestSplitAsync(string videoPath, int duration = 10, bool captureFirstScreen = true, bool captureLastScreen = true)
+        {
+            var thumbnails = new List<Thumbnail>();
+
+            try
+            {
+                // Get all files in the folder
+                DirectoryInfo d = new DirectoryInfo(videoPath);
+                FileInfo[] Files = d.GetFiles("*.png");
+                int i = 0;
+                foreach (FileInfo file in Files)
+                {
+                    TimeSpan time = TimeSpan.FromSeconds(i);
+                    string format = time.ToString(@"hh\:mm\:ss");
+
+                    var source = file.FullName.Replace(@"\", @"\\");
+                    var ocrPath = Path.Combine(Helper.GetBeforeLastIndexOf(source, '.') + ".txt");
+                    var ocr = File.ReadAllText(ocrPath);
+
+                    var thumbnail = new Thumbnail()
+                    {
+                        Source = source,
+                        Time = format,
+                        OcrResult = ocr
+                    };
+                    thumbnails.Add(thumbnail);
+                    i += 10;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ImageExtractorService Exception: {ex.Message}");
+            }
+
+            return Task.FromResult(thumbnails);
+        }
+
         private static List<Thumbnail> VideoSplit(string videoPath, string outputPath, int duration, bool captureFirstScreen, bool captureLastScreen)
         {
             try

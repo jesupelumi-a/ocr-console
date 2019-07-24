@@ -51,6 +51,13 @@ namespace OCR.Abstractions
             return lhs;
         }
 
+        public static string GetBeforeLastIndexOfString(string source, string delimeter)
+        {
+            int i = source.LastIndexOf(delimeter);
+            string result = i < 0 ? source : source.Substring(0, i);
+            return result;
+        }
+
         public static string GetAfterLastIndexOf(string source, string delimeter)
         {
             int startIndex = source.LastIndexOf(delimeter);
