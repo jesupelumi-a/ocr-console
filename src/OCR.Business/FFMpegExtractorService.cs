@@ -122,7 +122,7 @@ namespace OCR.Business
             catch (Exception ex)
             {
                 Console.WriteLine($"VideoSplit error: {ex.Message}");
-                return null;
+                throw ex;
             }
         }
 

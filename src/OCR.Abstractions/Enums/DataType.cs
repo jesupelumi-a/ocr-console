@@ -6,7 +6,7 @@ namespace OCR.Abstractions.Enums
 {
     public enum DataType
     {
-        Altitude, BTY, Depth, Easting, Northing, Heading, KP, Pitch, Roll,
+        Altitude, BTY, Depth, Easting, Northing, Heading, Kp, Pitch, Roll,
         TRN, THR,
     }
 }

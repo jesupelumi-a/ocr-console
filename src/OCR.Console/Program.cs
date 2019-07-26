@@ -19,6 +19,8 @@ namespace OCR.Console
     {
         private static IServiceProvider _serviceProvider;
 
+        private static bool TestMode { get; set; }
+
         async static Task Main(string[] args)
         {
             RegisterServices();
@@ -29,7 +31,7 @@ namespace OCR.Console
 
             Stopwatch timer = new Stopwatch();
             timer.Start();
-            var result = new List<Thumbnail>();
+            var thumbnails = new List<Thumbnail>();
             int duration = 10;
 
             //string path = "";
@@ -43,28 +45,43 @@ namespace OCR.Console
                 if (int.TryParse(args[1].Trim(), out int _time)) duration = _time > 0 ? _time : duration;
                 else throw new Exception("Time argument is invalid");
             }
+            if (args.Length > 2)
+            {
+                if (args[2] == "test")
+                {
+                    TestMode = true;
+                }
+            }
             System.Console.WriteLine($"-p {videoPath} -t {duration}");
 
-            if (string.IsNullOrWhiteSpace(videoPath)) throw new Exception("error occured with video path");
-            var thumbnails = await imageExtractorService.SplitAsync(videoPath, duration);
-            if (thumbnails.Count == 0) throw new Exception("no images returned to perform OCR on");
+            if (string.IsNullOrWhiteSpace(videoPath)) throw new Exception("Error occured with video path");
+            if (!TestMode)
+                thumbnails = await imageExtractorService.SplitAsync(videoPath, duration);
+            else
+                thumbnails = await imageExtractorService.TestSplitAsync(videoPath, duration);
 
-            int i = 1;
-            foreach (var thumbnail in thumbnails)
+
+            if (thumbnails.Count == 0) throw new Exception("No images returned to perform OCR on");
+
+            if (!TestMode)
             {
-                thumbnail.OcrResult = await ocrService.ExtractText(thumbnail.Source, i);
-                result.Add(thumbnail);
-                i++;
+                int i = 1;
+                foreach (var thumbnail in thumbnails)
+                {
+                    thumbnail.OcrResult = await ocrService.ExtractText(thumbnail.Source, i);
+                    i++;
+                }
             }
 
             var fileName = Helper.GetFileName(videoPath);
             string filePath = Path.Combine(fileName + ".csv");
             if (File.Exists(filePath)) File.Delete(filePath);
 
-            //result = thumbnails;
-
-            resultService.CreateCSV(result, filePath);
-
+            if (!TestMode)
+                resultService.CreateCSV(thumbnails, filePath);
+            else
+                resultService.TestCreateCSV(thumbnails, filePath);
+            
             timer.Stop();
             System.Console.WriteLine("Time elapsed: {0:hh\\:mm\\:ss}", timer.Elapsed);
             System.Console.WriteLine($"CSV path: {filePath}");
@@ -118,7 +135,7 @@ namespace OCR.Console
                     csv.WriteField(GetExtractedData(data, DataType.Easting));
                     csv.WriteField(GetExtractedData(data, DataType.Northing));
                     csv.WriteField(GetExtractedData(data, DataType.Heading));
-                    csv.WriteField(GetExtractedData(data, DataType.KP));
+                    csv.WriteField(GetExtractedData(data, DataType.Kp));
                     csv.WriteField(GetExtractedData(data, DataType.Pitch));
                     csv.WriteField(GetExtractedData(data, DataType.Roll));
                     csv.WriteField(GetExtractedData(data, DataType.THR));
@@ -198,7 +215,7 @@ namespace OCR.Console
                         delimiters.Add("Hdg:"); delimiters.Add("Hdg");
                         delimiters.Add(" H:"); delimiters.Add(" H ");
                         break;
-                    case DataType.KP:
+                    case DataType.Kp:
                         delimiters.Add("KP:"); delimiters.Add("KP");
                         delimiters.Add("Kp:"); delimiters.Add("Kp");
                         break;

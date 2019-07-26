@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace OCR.Abstractions
@@ -65,6 +66,30 @@ namespace OCR.Abstractions
 
             string result = source.Substring(startIndex + delimeter.Length);
             return result;
+        }
+
+        public static string RemoveAllExceptLastIndexOf(string source, string delimeter)
+        {
+            if (CountStringOccurrences(source, delimeter) <= 1) return source;
+
+            int i = source.IndexOf(delimeter);
+            string result = i < 0 ? source : source.Remove(i, delimeter.Length);
+
+            if (CountStringOccurrences(source, delimeter) > 1) RemoveAllExceptLastIndexOf(result, delimeter);
+
+            return result;
+        }
+
+        public static int CountStringOccurrences(string text, string pattern)
+        {
+            int count = 0;
+            int i = 0;
+            while ((i = text.IndexOf(pattern, i)) != -1)
+            {
+                i += pattern.Length;
+                count++;
+            }
+            return count;
         }
 
         public static string RemoveNewLine(string source)

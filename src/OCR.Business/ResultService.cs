@@ -36,8 +36,15 @@ namespace OCR.Business
 
         public void TestCreateCSV(List<Thumbnail> thumbnails, string filePath)
         {
-            var layout = new LayoutA();
-            layout.MatchAndCreateCSV(thumbnails, filePath);
+            var layoutA = new LayoutA();
+            var isLayoutA = layoutA.MatchAndCreateCSV(thumbnails, filePath);
+            if (isLayoutA) return;
+
+            var layoutB = new LayoutB();
+            var isLayoutB = layoutB.MatchAndCreateCSV(thumbnails, filePath);
+            if (isLayoutB) return;
+
+
         }
     }
 }

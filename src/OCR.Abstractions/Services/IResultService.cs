@@ -8,5 +8,6 @@ namespace OCR.Abstractions.Services
     public interface IResultService
     {
         void CreateCSV(List<Thumbnail> thumbnails, string filePath);
+        void TestCreateCSV(List<Thumbnail> thumbnails, string filePath);
     }
 }

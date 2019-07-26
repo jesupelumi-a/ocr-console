@@ -77,7 +77,7 @@ namespace OMV.Layouts
                     csv.WriteField(GetExtractedData(data, DataType.Easting));
                     csv.WriteField(GetExtractedData(data, DataType.Northing));
                     csv.WriteField(GetExtractedData(data, DataType.Heading));
-                    csv.WriteField(GetExtractedData(data, DataType.KP));
+                    csv.WriteField(GetExtractedData(data, DataType.Kp));
                     csv.WriteField(GetExtractedData(data, DataType.Pitch));
                     csv.WriteField(GetExtractedData(data, DataType.Roll));
                     csv.WriteField(GetExtractedData(data, DataType.THR));
@@ -152,7 +152,7 @@ namespace OMV.Layouts
                         delimiters.Add("Hdg:"); delimiters.Add("Hdg");
                         delimiters.Add(" H:"); delimiters.Add(" H ");
                         break;
-                    case DataType.KP:
+                    case DataType.Kp:
                         delimiters.Add("KP:"); delimiters.Add("KP");
                         delimiters.Add("Kp:"); delimiters.Add("Kp");
                         break;

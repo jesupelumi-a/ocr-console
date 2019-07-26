@@ -13,6 +13,8 @@ namespace OMV.Layouts
 {
     public class LayoutB
     {
+        public static bool IsKpType { get; set; }
+
         public bool MatchAndCreateCSV(List<Thumbnail> thumbnails, string csvPath)
         {
             bool retVal = false;
@@ -22,7 +24,16 @@ namespace OMV.Layouts
                 // Step 1: Get the first 5 ocr results
                 var thumbs = thumbnails.Take(5);
 
-                // Step 2: Run each thumb against all the models; when a model returns a match, that's our guy
+                foreach (var thumb in thumbs)
+                {
+                    var annotations = JsonConvert.DeserializeObject<List<Annotation>>(thumb.OcrResult);
+                    if (IsKpMatched(annotations))
+                    {
+                        IsKpType = true;
+                        break;
+                    }
+                }
+
                 foreach (var thumb in thumbs)
                 {
                     var annotations = JsonConvert.DeserializeObject<List<Annotation>>(thumb.OcrResult);
@@ -63,12 +74,11 @@ namespace OMV.Layouts
             {
                 csv.Configuration.Delimiter = ",";
                 csv.WriteField("Time");
-                csv.WriteField("Altitude");
-                csv.WriteField("BTY");
+                csv.WriteField("Easting");
+                csv.WriteField("Northing");
                 csv.WriteField("Depth");
                 csv.WriteField("Heading");
-                csv.WriteField("Pitch");
-                csv.WriteField("Roll");
+                if (IsKpType) csv.WriteField("Kp");
                 csv.WriteField("Description");
                 csv.NextRecord();
 
@@ -78,12 +88,11 @@ namespace OMV.Layouts
                     var data = !string.IsNullOrEmpty(item.Description) ? item.Description : "";
 
                     csv.WriteField(item.Time);
-                    csv.WriteField(GetExtractedData(data, DataType.Altitude));
-                    csv.WriteField(GetExtractedData(data, DataType.BTY));
+                    csv.WriteField(GetExtractedData(data, DataType.Easting));
+                    csv.WriteField(GetExtractedData(data, DataType.Northing));
                     csv.WriteField(GetExtractedData(data, DataType.Depth));
                     csv.WriteField(GetExtractedData(data, DataType.Heading));
-                    csv.WriteField(GetExtractedData(data, DataType.Pitch));
-                    csv.WriteField(GetExtractedData(data, DataType.Roll));
+                    if (IsKpType) csv.WriteField(GetExtractedData(data, DataType.Kp));
                     csv.WriteField(data.Replace('\n', ' '));
                     csv.NextRecord();
                     i++;
@@ -122,27 +131,21 @@ namespace OMV.Layouts
             {
                 switch (type)
                 {
-                    case DataType.Altitude:
-                        delimiters.Add("ALT:"); delimiters.Add("ALT");
+                    case DataType.Easting:
+                        delimiters.Add("\nE:"); delimiters.Add("\nE");
                         break;
-                    case DataType.BTY:
-                        delimiters.Add("BTY:"); delimiters.Add("BTY");
+                    case DataType.Northing:
+                        delimiters.Add("N:"); delimiters.Add("N");
                         break;
                     case DataType.Depth:
-                        delimiters.Add("DPT:"); delimiters.Add("DPT");
-                        delimiters.Add("OPT");
+                        delimiters.Add("\nD:"); delimiters.Add("\nD");
+                        delimiters.Add("\nB:"); delimiters.Add("\nB");
                         break;
                     case DataType.Heading:
-                        delimiters.Add("HDG:"); delimiters.Add("HDG");
-                        delimiters.Add("HUG");
+                        delimiters.Add("\nH:"); delimiters.Add("\nH");
                         break;
-                    case DataType.Pitch:
-                        delimiters.Add("\nP:"); delimiters.Add("\nP "); delimiters.Add("\nP");
-                        delimiters.Add("P: "); delimiters.Add("P ");
-                        break;
-                    case DataType.Roll:
-                        delimiters.Add("\nR:"); delimiters.Add("\nR "); delimiters.Add("\nR");
-                        delimiters.Add(" R:"); delimiters.Add(" R ");
+                    case DataType.Kp:
+                        delimiters.Add("\nKP:"); delimiters.Add("\nKP");
                         break;
                     default:
                         break;
@@ -180,10 +183,9 @@ namespace OMV.Layouts
                 var _extract = new string(charList.ToArray());
                 _extract = _extract.Trim();
 
-                if (_extract.Contains("\n"))
-                    _extract = _extract.Replace("\n", " ");
-
-                _extract = Helper.GetBeforeChar(_extract, ' ');
+                _extract = Helper.GetBeforeString(_extract, "\n");
+                _extract = _extract.Replace(' ', '.').Replace(',', '.');
+                _extract = Helper.RemoveAllExceptLastIndexOf(_extract, ".");
 
                 if (!string.IsNullOrEmpty(_extract))
                 {
@@ -197,7 +199,7 @@ namespace OMV.Layouts
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"PerformSecondDataExtraction Exception: {ex.Message} - {type} = {data}");
+                Console.WriteLine($"PerformSecondDataExtraction Exception: {ex.Message} - {type} = {data}");
             }
 
             return extract;
@@ -207,17 +209,21 @@ namespace OMV.Layouts
 
         public static bool Match(List<Annotation> ocrResult)
         {
-            return false;
+            bool retVal = IsEastingMatched(ocrResult) &&
+                          IsNorthingMatched(ocrResult) &&
+                          IsDepthMatched(ocrResult);
+
+            return retVal;
         }
 
         public static bool IsEastingMatched(List<Annotation> ocrResult)
         {
             bool retVal = false;
 
-            int eastingMinX0 = 25; int eastingMaxX0 = 35; int eastingMinY0 = 70; int eastingMaxY0 = 80;
-            int eastingMinX1 = 60; int eastingMaxX1 = 70; int eastingMinY1 = 70; int eastingMaxY1 = 80;
-            int eastingMinX2 = 60; int eastingMaxX2 = 70; int eastingMinY2 = 60; int eastingMaxY2 = 70;
-            int eastingMinX3 = 25; int eastingMaxX3 = 35; int eastingMinY3 = 60; int eastingMaxY3 = 70;
+            int eastingMinX0 = 421; int eastingMaxX0 = 431; int eastingMinY0 = 15; int eastingMaxY0 = 25;
+            int eastingMinX1 = 440; int eastingMaxX1 = 670; int eastingMinY1 = 15; int eastingMaxY1 = 25;
+            int eastingMinX2 = 440; int eastingMaxX2 = 670; int eastingMinY2 = 35; int eastingMaxY2 = 45;
+            int eastingMinX3 = 421; int eastingMaxX3 = 431; int eastingMinY3 = 35; int eastingMaxY3 = 45;
             retVal = ocrResult.Exists(d => ((d.BoundingPoly.Vertices[0].X >= eastingMinX0 && d.BoundingPoly.Vertices[0].X <= eastingMaxX0
                                               && d.BoundingPoly.Vertices[0].Y >= eastingMinY0 && d.BoundingPoly.Vertices[0].Y <= eastingMaxY0) ||
 
@@ -230,20 +236,20 @@ namespace OMV.Layouts
                                                 (d.BoundingPoly.Vertices[3].X >= eastingMinX3 && d.BoundingPoly.Vertices[3].X <= eastingMaxX3
                                               && d.BoundingPoly.Vertices[3].Y >= eastingMinY3 && d.BoundingPoly.Vertices[3].Y <= eastingMaxY3))
 
-                                              && d.Description.Contains("easting")
+                                              && d.Description.Contains("E")
                                                 );
 
             return retVal;
         }
 
-        public static bool DepthMatched(List<Annotation> ocrResult)
+        public static bool IsNorthingMatched(List<Annotation> ocrResult)
         {
             bool retVal = false;
 
-            int dftMinX0 = 19; int dftMaxX0 = 29; int dftMinY0 = 73; int dftMaxY0 = 79;
-            int dftMinX1 = 61; int dftMaxX1 = 71; int dftMinY1 = 73; int dftMaxY1 = 79;
-            int dftMinX2 = 61; int dftMaxX2 = 71; int dftMinY2 = 86; int dftMaxY2 = 96;
-            int dftMinX3 = 19; int dftMaxX3 = 29; int dftMinY3 = 86; int dftMaxY3 = 96;
+            int dftMinX0 = 545; int dftMaxX0 = 555; int dftMinY0 = 15; int dftMaxY0 = 25;
+            int dftMinX1 = 560; int dftMaxX1 = 675; int dftMinY1 = 15; int dftMaxY1 = 25;
+            int dftMinX2 = 560; int dftMaxX2 = 675; int dftMinY2 = 25; int dftMaxY2 = 35;
+            int dftMinX3 = 545; int dftMaxX3 = 555; int dftMinY3 = 25; int dftMaxY3 = 35;
             retVal = ocrResult.Exists(d => ((d.BoundingPoly.Vertices[0].X >= dftMinX0 && d.BoundingPoly.Vertices[0].X <= dftMaxX0
                                               && d.BoundingPoly.Vertices[0].Y >= dftMinY0 && d.BoundingPoly.Vertices[0].Y <= dftMaxY0) ||
 
@@ -256,20 +262,20 @@ namespace OMV.Layouts
                                                 (d.BoundingPoly.Vertices[3].X >= dftMinX3 && d.BoundingPoly.Vertices[3].X <= dftMaxX3
                                               && d.BoundingPoly.Vertices[3].Y >= dftMinY3 && d.BoundingPoly.Vertices[3].Y <= dftMaxY3))
 
-                                              && d.Description.Contains("DPT")
+                                              && d.Description.Contains("N")
                                                 );
 
             return retVal;
         }
 
-        public static bool HeadingMatched(List<Annotation> ocrResult)
+        public static bool IsDepthMatched(List<Annotation> ocrResult)
         {
             bool retVal = false;
 
-            int hdgMinX0 = 20; int hdgMaxX0 = 30; int hdgMinY0 = 90; int hdgMaxY0 = 100;
-            int hdgMinX1 = 60; int hdgMaxX1 = 70; int hdgMinY1 = 90; int hdgMaxY1 = 100;
-            int hdgMinX2 = 60; int hdgMaxX2 = 70; int hdgMinY2 = 105; int hdgMaxY2 = 115;
-            int hdgMinX3 = 20; int hdgMaxX3 = 30; int hdgMinY3 = 105; int hdgMaxY3 = 115;
+            int hdgMinX0 = 33; int hdgMaxX0 = 43; int hdgMinY0 = 45; int hdgMaxY0 = 55;
+            int hdgMinX1 = 50; int hdgMaxX1 = 60; int hdgMinY1 = 45; int hdgMaxY1 = 55;
+            int hdgMinX2 = 50; int hdgMaxX2 = 60; int hdgMinY2 = 60; int hdgMaxY2 = 70;
+            int hdgMinX3 = 33; int hdgMaxX3 = 43; int hdgMinY3 = 60; int hdgMaxY3 = 70;
             retVal = ocrResult.Exists(d => ((d.BoundingPoly.Vertices[0].X >= hdgMinX0 && d.BoundingPoly.Vertices[0].X <= hdgMaxX0
                                               && d.BoundingPoly.Vertices[0].Y >= hdgMinY0 && d.BoundingPoly.Vertices[0].Y <= hdgMaxY0) ||
 
@@ -282,33 +288,33 @@ namespace OMV.Layouts
                                                 (d.BoundingPoly.Vertices[3].X >= hdgMinX3 && d.BoundingPoly.Vertices[3].X <= hdgMaxX3
                                               && d.BoundingPoly.Vertices[3].Y >= hdgMinY3 && d.BoundingPoly.Vertices[3].Y <= hdgMaxY3))
 
-                                              && d.Description.Contains("HDG")
+                                              && d.Description.Contains("D")
                                                 );
 
             return retVal;
         }
 
-        public static bool TRNMatched(List<Annotation> ocrResult)
+        public static bool IsKpMatched(List<Annotation> ocrResult)
         {
             bool retVal = false;
 
-            int trnMinX0 = 20; int trnMaxX0 = 30; int trnMinY0 = 112; int trnMaxY0 = 122;
-            int trnMinX1 = 60; int trnMaxX1 = 70; int trnMinY1 = 112; int trnMaxY1 = 122;
-            int trnMinX2 = 60; int trnMaxX2 = 70; int trnMinY2 = 125; int trnMaxY2 = 135;
-            int trnMinX3 = 20; int trnMaxX3 = 30; int trnMinY3 = 125; int trnMaxY3 = 135;
-            retVal = ocrResult.Exists(d => ((d.BoundingPoly.Vertices[0].X >= trnMinX0 && d.BoundingPoly.Vertices[0].X <= trnMaxX0
-                                              && d.BoundingPoly.Vertices[0].Y >= trnMinY0 && d.BoundingPoly.Vertices[0].Y <= trnMaxY0) ||
+            int minX0 = 422; int maxX0 = 432; int minY0 = 50; int maxY0 = 60;
+            int minX1 = 450; int maxX1 = 525; int minY1 = 50; int maxY1 = 60;
+            int minX2 = 450; int maxX2 = 525; int minY2 = 70; int maxY2 = 70;
+            int minX3 = 422; int maxX3 = 432; int minY3 = 70; int maxY3 = 70;
+            retVal = ocrResult.Exists(d => ((d.BoundingPoly.Vertices[0].X >= minX0 && d.BoundingPoly.Vertices[0].X <= maxX0
+                                              && d.BoundingPoly.Vertices[0].Y >= minY0 && d.BoundingPoly.Vertices[0].Y <= maxY0) ||
 
-                                                (d.BoundingPoly.Vertices[1].X >= trnMinX1 && d.BoundingPoly.Vertices[1].X <= trnMaxX1
-                                              && d.BoundingPoly.Vertices[1].Y >= trnMinY1 && d.BoundingPoly.Vertices[1].Y <= trnMaxY1) ||
+                                                (d.BoundingPoly.Vertices[1].X >= minX1 && d.BoundingPoly.Vertices[1].X <= maxX1
+                                              && d.BoundingPoly.Vertices[1].Y >= minY1 && d.BoundingPoly.Vertices[1].Y <= maxY1) ||
 
-                                                (d.BoundingPoly.Vertices[2].X >= trnMinX2 && d.BoundingPoly.Vertices[2].X <= trnMaxX2
-                                              && d.BoundingPoly.Vertices[2].Y >= trnMinY2 && d.BoundingPoly.Vertices[2].Y <= trnMaxY2) ||
+                                                (d.BoundingPoly.Vertices[2].X >= minX2 && d.BoundingPoly.Vertices[2].X <= maxX2
+                                              && d.BoundingPoly.Vertices[2].Y >= minY2 && d.BoundingPoly.Vertices[2].Y <= maxY2) ||
 
-                                                (d.BoundingPoly.Vertices[3].X >= trnMinX3 && d.BoundingPoly.Vertices[3].X <= trnMaxX3
-                                              && d.BoundingPoly.Vertices[3].Y >= trnMinY3 && d.BoundingPoly.Vertices[3].Y <= trnMaxY3))
+                                                (d.BoundingPoly.Vertices[3].X >= minX3 && d.BoundingPoly.Vertices[3].X <= maxX3
+                                              && d.BoundingPoly.Vertices[3].Y >= minY3 && d.BoundingPoly.Vertices[3].Y <= maxY3))
 
-                                              && d.Description.Contains("TRN")
+                                              && d.Description.Contains("KP")
                                                 );
 
             return retVal;
