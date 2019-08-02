@@ -31,13 +31,8 @@ namespace OCR.Console
 
             Stopwatch timer = new Stopwatch();
             timer.Start();
-            var thumbnails = new List<Thumbnail>();
+            _ = new List<Thumbnail>();
             int duration = 10;
-
-            //string path = "";
-            //foreach (var arg in args)
-            //    path += arg + " ";
-            //videoPath = path;
 
             string videoPath = args[0];
             if (args.Length > 1)
@@ -55,11 +50,11 @@ namespace OCR.Console
             System.Console.WriteLine($"-p {videoPath} -t {duration}");
 
             if (string.IsNullOrWhiteSpace(videoPath)) throw new Exception("Error occured with video path");
+            List<Thumbnail> thumbnails;
             if (!TestMode)
                 thumbnails = await imageExtractorService.SplitAsync(videoPath, duration);
             else
                 thumbnails = await imageExtractorService.TestSplitAsync(videoPath, duration);
-
 
             if (thumbnails.Count == 0) throw new Exception("No images returned to perform OCR on");
 

@@ -22,7 +22,6 @@ namespace OMV.Layouts
                 // Step 1: Get the first 5 ocr results
                 var thumbs = thumbnails.Take(5);
 
-                // Step 2: Run each thumb against all the models; when a model returns a match, that's our guy
                 foreach (var thumb in thumbs)
                 {
                     var annotations = JsonConvert.DeserializeObject<List<Annotation>>(thumb.OcrResult);
@@ -45,7 +44,6 @@ namespace OMV.Layouts
         public static void CreateCSV(List<Thumbnail> thumbnails, string csvPath)
         {
             var annotations = new List<Annotation>();
-            int i = 0;
             foreach (var thumbnail in thumbnails)
             {
                 var ocrResult = new OcrResult
@@ -55,7 +53,6 @@ namespace OMV.Layouts
                 var annotation = ocrResult.MainAnnotation;
                 annotation.Time = thumbnail.Time;
                 annotations.Add(annotation);
-                i++;
             }
 
             var csvString = new StringWriter();
@@ -72,7 +69,6 @@ namespace OMV.Layouts
                 csv.WriteField("Description");
                 csv.NextRecord();
 
-                i = 0;
                 foreach (var item in annotations)
                 {
                     var data = !string.IsNullOrEmpty(item.Description) ? item.Description : "";
@@ -86,7 +82,6 @@ namespace OMV.Layouts
                     csv.WriteField(GetExtractedData(data, DataType.Roll));
                     csv.WriteField(data.Replace('\n', ' '));
                     csv.NextRecord();
-                    i++;
                 }
             }
             File.AppendAllText(csvPath, csvString.ToString());
